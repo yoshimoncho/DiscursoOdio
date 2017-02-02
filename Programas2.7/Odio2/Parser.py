@@ -79,7 +79,7 @@ def lexicon_function():
     lexicon = defaultdict(lambda: defaultdict(int))
       
     # aumento de frecuencias por tag dada una palabra
-    for sentence in wikicorpus(1000000):
+    for sentence in wikicorpus(2000000):
         for w, tag in sentence:
             lexicon[w][tag] += 1
      
@@ -88,31 +88,20 @@ def lexicon_function():
         freq = sum(tags.values())      # 3741 + 243 + ... (frecuencia absolutas)
         tag  = max(tags, key=tags.get) # DA
         top.append((freq, w, tag))
-    top = sorted(top, reverse=True)[:100000] # top 100,000
+    top = sorted(top, reverse=True)[:200000] # top 100,000
     top = ["%s %s" % (w, tag) for freq, w, tag in top if w]
      
-    open("es-lexicon.txt", "w").write(BOM_UTF8 + "\n".join(top).encode("utf-8"))
+    open("es-lexicon2.txt", "w").write(BOM_UTF8 + "\n".join(top).encode("utf-8"))
     
 def rules_function():
-    sentences = wikicorpus(words=1000000)
+    sentences = wikicorpus(words=2000000)
     
     ANONYMOUS = "anonymous"
     for s in sentences:
         for i, (w, tag) in enumerate(s):
             if tag == "NP": # NP = proper noun in Parole tagset.
                 s[i] = (ANONYMOUS, "NP")
-    """
-    ctx = [ # Context = surrounding words and tags.
-        SymmetricProximateTokensTemplate(ProximateTagsRule,  (1, 1)),
-        SymmetricProximateTokensTemplate(ProximateTagsRule,  (1, 2)),
-        SymmetricProximateTokensTemplate(ProximateTagsRule,  (1, 3)),
-        SymmetricProximateTokensTemplate(ProximateTagsRule,  (2, 2)),
-        SymmetricProximateTokensTemplate(ProximateWordsRule, (0, 0)),
-        SymmetricProximateTokensTemplate(ProximateWordsRule, (1, 1)),
-        SymmetricProximateTokensTemplate(ProximateWordsRule, (1, 2)),
-        ProximateTokensTemplate(ProximateTagsRule, (-1, -1), (1, 1)),
-    ]
-    """
+
     ctx = [
           Template(Pos((1, 1))), 
           Template(Pos((1, 2))),
@@ -127,7 +116,7 @@ def rules_function():
      
     tagger = UnigramTagger(sentences)
     tagger = BrillTaggerTrainer(tagger, ctx , trace=0)
-    tagger = tagger.train(sentences, max_rules=100)
+    tagger = tagger.train(sentences, max_rules=200)
     #print (tagger.evaluate(wikicorpus(10000, start=1)))
     ctx = []
     for rule in tagger.rules():
@@ -156,13 +145,13 @@ def rules_function():
         
         ctx.append("%s %s %s %s" % (a, b, cmd, x))
         
-    open("es-context.txt", "w").write(BOM_UTF8 + "\n".join(ctx).encode("utf-8"))
+    open("es-context2.txt", "w").write(BOM_UTF8 + "\n".join(ctx).encode("utf-8"))
 
 def rules_suffix():
     # {"mente": {"RG": 4860, "SP": 8, "VMS": 7}}
     suffix = defaultdict(lambda: defaultdict(int))
      
-    for sentence in wikicorpus(1000000):
+    for sentence in wikicorpus(2000000):
         for w, tag in sentence:
             x = w[-5:] # Last 5 characters.
             if len(x) < len(w) and tag != "NP":
@@ -178,10 +167,10 @@ def rules_suffix():
     top = sorted(top, reverse=True)
     top = filter(lambda (f1, f2, x, tag): f1 >= 10 and f2 > 0.8, top)
     top = filter(lambda (f1, f2, x, tag): tag != "NCS", top)
-    top = top[:100] 
+    top = top[:200] 
     top = ["%s %s fhassuf %s %s" % ("NCS", x, len(x), tag) for f1, f2, x, tag in top]
      
-    open("es-morphology.txt", "w").write(BOM_UTF8 + "\n".join(top).encode("utf-8"))
+    open("es-morphology2.txt", "w").write(BOM_UTF8 + "\n".join(top).encode("utf-8"))
 
 
 PAROLE = {
@@ -214,30 +203,30 @@ def parole2penntreebank(token, tag):
     return token, PAROLE.get(tag, tag)
  
 class SpanishParser(Parser):
-     
+    def __init__(self,morphology_path="es-morphology.txt",context_path="es-context.txt",lexicon_path= "es-lexicon.txt"):
+        morphology = Morphology(morphology_path)
+        context = Context(context_path)
+        lexicon = Lexicon(lexicon_path)
+        super(SpanishParser,self).__init__(lexicon = lexicon,
+                                           morphology = morphology,
+                                           context = context,
+                                           default = ("NCS", "NP", "Z"),language = "es")
+        
     def find_tags(self, tokens, **kwargs):
         # Parser.find_tags() can take an optional map(token, tag) function,
         # which returns an updated (token, tag)-tuple for each token. 
         kwargs.setdefault("map", parole2penntreebank)
         return Parser.find_tags(self, tokens, **kwargs)
 
-morphology = Morphology(path="es-morphology.txt")
-context = Context(path="es-context.txt")
-lexicon = Lexicon(path = "es-lexicon.txt")
-parser = SpanishParser(lexicon = lexicon,
-                       morphology = morphology,
-                       context = context,
-                       default = ("NCS", "NP", "Z"),language = "es")
-def parse(s, *args, **kwargs):
-    return parser.parse(s, *args, **kwargs)
 
 
-def test():
+
+def test(parser):
     i = 0
     n = 0
     for s1 in wikicorpus(100000, start=1):
         s2 = " ".join(w for w, tag in s1)
-        s2 = parse(s2, tags=True, chunks=False, map=None).split()[0]
+        s2 = parser.parse(s2, tags=True, chunks=False, map=None).split()[0]
         for (w1, tag1), (w2, tag2) in zip(s1, s2):
             if tag1 == tag2:
                 i += 1
@@ -245,13 +234,17 @@ def test():
     print float(i) / n
 
 def main():
-    cadena = parse(u"serranos",tokenize=True)
+    
+    parser = SpanishParser(morphology_path="es-morphology2.txt",
+                           context_path="es-context2.txt",
+                           lexicon_path= "es-lexicon2.txt")
+    cadena = parser.parse(u"ellos son feo",tokenize=True)
     cadenas = cadena.split()[0]
     for cadena in cadenas:
         nombre = cadena[0]
         descr = cadena[1]
         print(nombre)
-        print(TRADUCTOR[descr])
+        print(descr)
     #lexicon_function()
     #rules_function()
     #rules_suffix()
