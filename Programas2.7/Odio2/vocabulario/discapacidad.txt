@@ -2,4 +2,3 @@ mongolo
 mongolico
 monguer
 retrasado
-

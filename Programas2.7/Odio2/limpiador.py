@@ -85,9 +85,8 @@ class Limpiador:
                 i+=1
         print("_______________________________________________________")
                 
-    def limpia(self,ruta="emospace2"):
-        i = 0
-
+    def limpia(self,diccionario,num_doc,ruta="emospace2" ):
+        
         filename = ruta.split("/")
 
         #Usaremos solo la parte del documento, quitando directorio por eso el -1
@@ -102,8 +101,10 @@ class Limpiador:
                 print("Error en el numero de campos")
             else:
                 texto = campos[4]
-                file.write(str(i)+";||;" + self.clean(texto).encode('unicode-escape')+"\n")
-                i+=1
+                identificador = campos[1][3:]
+                id_relativo = campos[0][2:]
+                file.write(identificador+";||;" + self.clean(texto).encode('unicode-escape')+"\n")
+                diccionario[int(identificador)] = (num_doc,int(id_relativo))
         file.close()
         return self.rutaout
 
