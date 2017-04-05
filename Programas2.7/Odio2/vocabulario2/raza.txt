@@ -22,8 +22,8 @@ charnega 0
 charnegas 0
 charnego 0
 charnegos 0
-cholo 0
-cholos 0
+cholo -2
+cholos -2
 machupichu -2
 machupichus -2
 guachu 0
@@ -46,3 +46,14 @@ guera -2
 guero -2
 payoponi 0
 payoponis 0
+gitanos -2
+gitano -2
+gitana -2
+gitanas -2
+mulato -2
+racista -2
+racistas -2
+xenofoba -2
+xenofobas -2
+xenofobo -2
+xenofobos -2

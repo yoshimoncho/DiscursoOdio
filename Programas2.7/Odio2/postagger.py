@@ -264,6 +264,3 @@ def main():
 
 
     #print(cadena[0])
-
-if __name__ == "__main__":
-    main()

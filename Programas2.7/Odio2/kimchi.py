@@ -57,16 +57,17 @@ def main():
 	print("Veces puta: "+ str(puta))
 	"""
 
-
-
+	contador = 0
 	for doc in pre_tagger_corpus:
 		i = 0
+		
 		for termino in doc:
 			if i == 0:
 				#Puede haber mas de una categoria para un tweet
 				categorias = termino[1:]
 				if(len(categorias) > 1):
 					print("Tweet con mas de una categorias: "+ str(abs(termino[0])))
+					contador+=1
 				i = 1
 			else:
 				for categoria in categorias:
@@ -79,6 +80,7 @@ def main():
 						else:
 							term_dic[termino[0]][categoria] += termino[1]
 
+	print("Totales con mas de 1 categoria "+str(contador))
 	#Calculamos los pesos de cada documento para su categoria/as
 
 	pesos_categorias = defaultdict(lambda: [])
@@ -105,7 +107,7 @@ def main():
 				for categoria in categorias:
 					peso_aux = tf(termino[0], categoria, term_dic) * icf(termino[0],num_category, term_dic)
 					max_pesos[categoria] = max((peso_aux,termino[0]),max_pesos[categoria])
-					pesos[categoria] += peso_aux
+					pesos[categoria] += peso_aux*termino[1]
 		pesos[categoria] = pesos[categoria]/len(doc)
 
 		for categoria in categorias:
@@ -128,7 +130,7 @@ def main():
 	#id2word = load_dic_id2word(dictionary)
 
 	#print(doc_max_pesos[pesos_categorias[1][0][1]])
-	
+	#id2docid_posrel = load_id2docid_posrel()
 	#print(map(lambda x: (x[0],id2docid_posrel[x[1]] ) ,pesos_categorias[3]))
 	tagger_output(pesos_categorias,dict_etiquetas)
 
@@ -140,7 +142,6 @@ def main2():
 	
 	
 	dictionary = corpora.Dictionary()
-
 	corpus = corpora.MmCorpus('tweets_corpus.mm')
 	num_docs = corpus.num_docs
 	num_terms = corpus.num_terms
@@ -230,7 +231,9 @@ def load_vocab_tokens(dictionary,stemming=False,foldername = "vocabulario",filen
 				print("Didn't find: '"+token_vocab+"' in tweets" )
 		f.close()
 		i += 1
-		
+
+	#Guardar vocabulario para generacion de atributos
+	pickle.dump(list(vocabulario.keys()),open( "training_set/vocab_features.p", "wb" ))
 	return vocabulario,i+1,dict_etiquetas
 
 #Carga los terminos del vocabulario con su correspondiente clase (segundo modelo)
@@ -266,6 +269,8 @@ def load_vocab_tokens2(dictionary,stemming=False,foldername = "vocabulario2",fil
 			print("Didn't find: '"+token_vocab+"' from hate doc" )
 	f.close()
 
+	#Guardar vocabulario para generacion de atributos
+	pickle.dump(list(vocabulario.keys()),open( "training_set/vocab_features.p", "wb" ))
 	return vocabulario,i,dict_etiquetas
 
 
@@ -276,7 +281,7 @@ def tagger_output(pesos_categorias,dict_etiquetas):
 	id2docid_posrel = load_id2docid_posrel()
 	posiciones_relativas = []
 	f = codecs.open("tagger_output/new_output.txt","w", "utf-8")
-	f.write(str(len(pesos_categorias.keys())) + "\n")
+
 	for categoria in pesos_categorias.keys():
 		posiciones_relativas = posiciones_relativas +  map(lambda x: id2docid_posrel[x[1]]+(categoria,),pesos_categorias[categoria])
 
@@ -285,6 +290,7 @@ def tagger_output(pesos_categorias,dict_etiquetas):
 	pos_aux = -1
 	doc_tweet_anterior = -1
 	doc_tweet_pos = -1
+	id_seleccionados = []
 	while len(posiciones_relativas) > 0:
 		posicion = posiciones_relativas.pop(0)
 		if doc_tweet_anterior == posicion[0] and doc_tweet_pos == posicion[1]:
@@ -301,8 +307,11 @@ def tagger_output(pesos_categorias,dict_etiquetas):
 			if linea is not None:
 				frags = linea.split(";||;")
 				if frags[0] == "n="+str(posicion[1]):
-					f.write(frags[1]+";||;"+frags[4]+"\n")
+					id_seleccionados.append(int(frags[1][3:]))
+					f.write(frags[1]+";||;"+frags[4]+";||;\n")
 					break
+	#Almacenar la lista de tweets seleccionados para generar el conjunto de entrenamiento
+	pickle.dump(id_seleccionados,open( "training_set/training_tweets.p", "wb" ))
 	f.close()
 	aux_file.close()
 
@@ -403,3 +412,4 @@ def save_tweet_tokens(numero=10):
 
 if __name__ == "__main__":
 	main()
+	#save_tweet_tokens()

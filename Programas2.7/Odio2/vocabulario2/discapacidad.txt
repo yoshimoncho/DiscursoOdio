@@ -8,3 +8,5 @@ enano -2
 tarado 0
 bizco -2
 patachula 0
+jorobado -2
+chepudo -2

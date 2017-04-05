@@ -5,9 +5,13 @@ import codecs
 import pickle
 
 
+"""
+Programa que se encarga de limpiar una lista de ficheros
+pasados por parametros, se obtendra el archivo limpiado parcialmente
+en cleancorpus y el completado en treatcorpus
+"""
 
-
-def main(archivos=["rawcorpus/basegrande1.txt"]):
+def main(archivos):
     parser = SpanishParser(morphology_path="morfo/es-morphology2.txt",context_path="morfo/es-context2.txt",lexicon_path= "morfo/es-lexicon4.txt")
     ref_dict = {}
     for j in range(len(archivos)):

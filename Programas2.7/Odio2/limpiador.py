@@ -51,14 +51,24 @@ class Limpiador:
     re_zzz = re.compile(r"zz[z]+")
     re_end_cleaner = re.compile(r"[\s\t]+$")
 
+    re_ques = re.compile(r"[?]+")
+    re_excl = re.compile(r"[!]+")
+    re_xd = re.compile(r'xd[dx]+')
+    re_comillas = re.compile(r'"')
+    re_comillas2 = re.compile(r"'")
+    re_risas = re.compile(r"jaj[hja]+|hah[hja]+")
+    re_dospuntos = re.compile(r"[:]+")
+    re_wtf = re.compile(r"wtf[wtf]+")
+
     def __init__ (self,path):
         self.lineas = []
-        file = codecs.open(path, "r", "utf-8")
-        self.ruta = path
-        for linea in file:
-            self.lineas.append(linea)
-        print("Tamaño del fichero: "+str(len(self.lineas)))
-        file.close()
+        if path is not None:
+            file = codecs.open(path, "r", "utf-8")
+            self.ruta = path
+            for linea in file:
+                self.lineas.append(linea)
+            print("Tamaño del fichero: "+str(len(self.lineas)))
+            file.close()
         cadena = ""
         prefix = "\U0001f"
         for i in range(int("FFF",16)+1):
@@ -114,16 +124,27 @@ class Limpiador:
         line = line.lower()
 
         line = line.replace("\n", ". ").replace("\r", ". ").replace(u"\u0085", ". ").replace(u"\u2028", ". ").replace(u"\u2029", ". ")
-        line = self.re_urls.sub(" URL ", line)
+        line = self.re_urls.sub(" TOKENURL ", line)
         line = self.re_tuser.sub(" USER ", line)
         line = self.re_number.sub(" ", line)
-        line = line.replace("."," ").replace("?"," ").replace(";", " ").replace("!"," ")
+        line = line.replace("."," ").replace(";", " ")
         line = line.replace(u"¿", " ")
         line = line.replace(u"¡", " ")
         line = line.replace(u"€", " ")
         line = line.replace(u"%", " ")
-		 #line = line.replace(".", " DOT ")
-		 #line = line.replace(",", " COMMA ")
+		#line = line.replace(".", " DOT ")
+		#line = line.replace(",", " COMMA ")
+
+        # 8 atributos nuevos
+        line = self.re_ques.sub(" TOKENQUES ", line)
+        line = self.re_excl.sub(" TOKENEXC ", line)
+        line = self.re_xd.sub(" TOKENXD ", line)
+        line = self.re_comillas.sub(" TOKENCOMI ", line)
+        line = self.re_comillas2.sub(" TOKENCOMI ", line)
+        line = self.re_risas.sub(" TOKENRISAS ", line)
+        line = self.re_dospuntos.sub(" TOKENRISAS ", line)
+        line = self.re_wtf.sub(" TOKENWTF ", line)
+
         line = line.replace(",", " ")
         line = line.replace("/", " ")
         line = line.replace("\\", " ")
@@ -134,7 +155,7 @@ class Limpiador:
         line = line.replace(")", " ")
         line = line.replace("(", " ")
         line = line.replace("'", " ")
-        line = line.replace(":", " ")
+        #line = line.replace(":", " ")
         line = line.replace(u"’", " ")
         line = line.replace(u"‘", " ")
         line = line.replace(u"º", " ")
