@@ -37,7 +37,7 @@ def main(archivos):
             fout.write("\n")
         file.close()
         fout.close()
-    pickle.dump(ref_dict,open( "id2docid_posrel.p", "wb" ))
+    pickle.dump(ref_dict,open( "program_data/id2docid_posrel.p", "wb" ))
 
 
 

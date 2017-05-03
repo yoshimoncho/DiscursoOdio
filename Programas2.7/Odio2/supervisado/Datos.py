@@ -43,6 +43,7 @@ class Datos(object):
         for i in range(n):
             linea = archivo.readline().splitlines()[0]
             datos[i,:] = linea.split(",")
+        archivo.close()
             
         #Creamos un diccionario por cada atributo y lo poblamos si es nominal
         self.createDict(datos)

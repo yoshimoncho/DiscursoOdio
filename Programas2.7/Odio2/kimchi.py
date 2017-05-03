@@ -22,13 +22,13 @@ def main():
 	dictionary = corpora.Dictionary()
 
 	
-	corpus = corpora.MmCorpus('tweets_corpus.mm')
+	corpus = corpora.MmCorpus('program_data/tweets_corpus.mm')
 	num_docs = corpus.num_docs
 	num_terms = corpus.num_terms
 	corpus = (list(corpus))
 	print("Corpus, loaded...")
 
-	dictionary = dictionary.load('tweets.dict')
+	dictionary = dictionary.load('program_data/tweets.dict')
 	print("Dictionary, loaded...")
 	
 	pre_tagger_corpus, vocab_dict,num_category,dict_etiquetas = category_tagger_advanced(corpus,dictionary)
@@ -135,33 +135,6 @@ def main():
 	tagger_output(pesos_categorias,dict_etiquetas)
 
 
-#Programa alternativo usando palabras soporte de odio
-def main2():
-	#save_tweet_tokens()
-	#heaps_law()
-	
-	
-	dictionary = corpora.Dictionary()
-	corpus = corpora.MmCorpus('tweets_corpus.mm')
-	num_docs = corpus.num_docs
-	num_terms = corpus.num_terms
-	corpus = (list(corpus))
-	print("Corpus, loaded...")
-
-	dictionary = dictionary.load('tweets.dict')
-	print("Dictionary, loaded...")
-
-	pre_tagger_corpus,num_category = category_tagger_advanced(corpus,dictionary)
-	print(len(pre_tagger_corpus))
-	id2docid_posrel = load_id2docid_posrel()
-	for elem in pre_tagger_corpus:
-		print(id2docid_posrel[abs(elem[0][0])])
-
-
-
-
-
-
 
 # Calcula el icf de un termino, el icf es independiente de la categoria
 def icf(term,num_category, dictionary):
@@ -182,7 +155,7 @@ def category_tagger_basic(corpus,dictionary):
 	# Unos 4s de ejecucion (bastante eficiente)
 	
 	
-	final_list = imap(lambda corp: list(ifilter(lambda x: x != -1,imap(lambda x: x[0] if x[1] == -1 else vocab_dict[x[0]],corp))), corpus)
+	final_list = imap(lambda corp: list(ifilter(lambda x: x is not None,imap(lambda x: x[0] if x[1] == -1 else vocab_dict[x[0]],corp))), corpus)
 	resultado_sinfiltrar = imap(lambda x,y: [(x[0],)+tuple(set(x[1:]))]+y[1:] if len(x) > 1 else None,final_list,corpus)
 
 	#Obtenemos el corpus pre_clasificado, faltaria sacar el ranking de pesos.
@@ -199,7 +172,7 @@ def category_tagger_advanced(corpus,dictionary):
 
 	# [id, clase1,clase2]
 	
-	final_list = imap(lambda corp: list(ifilter(lambda x: x != -99,imap(lambda x: x[0] if x[1] == -1 else vocab_dict[x[0]],corp))), corpus)
+	final_list = imap(lambda corp: list(ifilter(lambda x: x is not None,imap(lambda x: x[0] if x[1] == -1 else vocab_dict[x[0]],corp))), corpus)
 	#Si nuestro tweet contiene una palabra de maldad entonces convertimos todas
 	# las negativas (malas leves) a positivas (verdaderas malas) y quitamos los 0 (palabra de maldad)
 	#  en otro caso quitamos los ceros y las que son negativa
@@ -216,7 +189,7 @@ def category_tagger_advanced(corpus,dictionary):
 
 #Carga los terminos del vocabulario con su correspondiente clase (primer modelo)
 def load_vocab_tokens(dictionary,stemming=False,foldername = "vocabulario",filenames=["discapacidad.txt","genero.txt","raza.txt","politica.txt"]):
-	vocabulario = defaultdict(lambda:-1)
+	vocabulario = defaultdict(lambda:None)
 	dict_etiquetas = defaultdict(lambda:"Empty")
 	i = 0
 	for file in filenames:
@@ -232,13 +205,13 @@ def load_vocab_tokens(dictionary,stemming=False,foldername = "vocabulario",filen
 		f.close()
 		i += 1
 
-	#Guardar vocabulario para generacion de atributos
+	#Guardar vocabulario para generacion de atributos (palabras de odio)
 	pickle.dump(list(vocabulario.keys()),open( "training_set/vocab_features.p", "wb" ))
 	return vocabulario,i+1,dict_etiquetas
 
 #Carga los terminos del vocabulario con su correspondiente clase (segundo modelo)
-def load_vocab_tokens2(dictionary,stemming=False,foldername = "vocabulario2",filenames=["discapacidad.txt","genero.txt","raza.txt","politica.txt"],hate="maldad.txt"):
-	vocabulario = defaultdict(lambda:-99)
+def load_vocab_tokens2(dictionary,stemming=False,foldername = "vocabulario2",filenames=["discapacidad.txt","genero.txt","raza.txt","politica.txt","religion.txt","clases.txt"],hate="maldad.txt"):
+	vocabulario = defaultdict(lambda:None)
 	dict_etiquetas = defaultdict(lambda:"Empty")
 	i = 1
 	for file in filenames:
@@ -330,7 +303,7 @@ Devuelve un diccionario guardado clave: id del tweet y valor: (doc_id, pos relat
 """
 def load_id2docid_posrel():
 	print("TweetId2Docid_posrel, loaded...")
-	return pickle.load( open( "id2docid_posrel.p", "rb" ) )	
+	return pickle.load( open( "program_data/id2docid_posrel.p", "rb" ) )	
 
 
 
@@ -368,7 +341,7 @@ Carga un diccionario de python dic_id2word con clave: id y valor:string del toke
 """
 
 def load_dic_id2word(dictionary):
-	return pickle.load( open( "dic_id2word.p", "rb" ) )
+	return pickle.load( open( "program_data/dic_id2word.p", "rb" ) )
 
 #Numero indica el numero de archivos a leer de treatcorpus
 def save_tweet_tokens(numero=10):
@@ -393,17 +366,18 @@ def save_tweet_tokens(numero=10):
 				else:
 					perdidos += 1
 					#print("Doc: "+ str(j) +" Num_Tweet: "+str(identificador))
+		file.close()
 
 	print("Lost tweets on create corpora: " + str(perdidos))
 	dictionary = corpora.Dictionary(texts)
 
 	dic_id2word = create_dic_id2word(dictionary)
-	pickle.dump(dic_id2word,open( "dic_id2word.p", "wb" ))
+	pickle.dump(dic_id2word,open( "program_data/dic_id2word.p", "wb" ))
 
 	#corpus = [dictionary.doc2bow(text) for text in texts]
 	corpus = map(lambda texto,numero: [(-numero,-1)] + dictionary.doc2bow(texto) ,texts,lista_ids)
-	corpora.MmCorpus.serialize('tweets_corpus.mm',corpus)
-	dictionary.save('tweets.dict')
+	corpora.MmCorpus.serialize('program_data/tweets_corpus.mm',corpus)
+	dictionary.save('program_data/tweets.dict')
 
 
 
@@ -411,5 +385,6 @@ def save_tweet_tokens(numero=10):
 
 
 if __name__ == "__main__":
+	print("Ejecutando kimchi.py ...")
 	main()
 	#save_tweet_tokens()
