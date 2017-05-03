@@ -30,7 +30,7 @@ def main(charged_filtered =False,add_more=True, tf_idf_used=False,freq_used=Fals
 
 	
 	if(add_bigrams):
-		bigram_corpus = pickle.load( open( "training_set/bigrams_struct.p", "rb" ) )
+		bigram_corpus = pickle.load( open( "program_data/bigrams_struct.p", "rb" ) )
 		vocab_features = pickle.load( open( "training_set/vocab_features.p", "rb" ) )
 		if not charged_filtered_bigrams:
 			hate_bigrams = create_hate_bigrams_dict(vocab_features,bigram_corpus)
@@ -271,7 +271,7 @@ def generate_bigrams_struct(numero=10):
 					perdidos += 1
 		file.close()
 
-	pickle.dump(texts,open( "training_set/bigrams_struct.p", "wb" ))
+	pickle.dump(texts,open( "program_data/bigrams_struct.p", "wb" ))
 
 """
 Genera bigrama de terminos asociados al odio
