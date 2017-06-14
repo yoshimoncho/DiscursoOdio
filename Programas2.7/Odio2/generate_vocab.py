@@ -63,4 +63,4 @@ def extract_list_tuple_labels(filename):
 
 
 if __name__ == "__main__":
-	generate_vocab("program_data/tweets_corpus.mm","training_set/tagged_1000.txt")
+	generate_vocab("program_data/tweets_corpus.mm","training_set/tagged_3000.txt")

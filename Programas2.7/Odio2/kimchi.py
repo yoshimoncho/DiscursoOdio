@@ -14,8 +14,10 @@ import codecs
 # self.num_docs, self.num_terms
 
 
-def main():
-	#save_tweet_tokens()
+def main(save_tokens = False):
+	
+	if save_tokens:
+		save_tweet_tokens()
 	#heaps_law()
 	
 	
